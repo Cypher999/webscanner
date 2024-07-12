@@ -1,0 +1,99 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Index
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 border border-1 p-4" style="height:90vh;overflow:auto">
+    <input type="text" name="target-host" id="target-host" class="form-control"/>
+    <input type="button" id="check" value="check" class="btn btn-primary">
+    <div class="loading d-none">
+        Loading
+    </div>
+    <div class="row">
+        <div class="col-10 registar-info">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-10 important-dates">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-10 name-server">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-10 similiar-domains">
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function(){
+        $("#check").on('click',async()=>{
+            let target_host=$("input[name=target-host]").val();
+            var formData = new FormData();
+            formData.append('target-host', target_host);
+            $(".loading").toggleClass('d-none');
+            $(".registar-info").html("");
+            $(".important-dates").html("");
+            $(".name-server").html("");
+            $(".similiar-domains").html("");
+            $.ajax({
+                url: '/whois-scan', // URL where you want to send the POST request
+                type: 'POST', // HTTP method (POST in this case)
+                data: formData, // Data to send, including files
+                contentType: false, // Not to set any content type header
+                processData: false, // Not to process data
+                success: function(response) {
+                    const registar_info=response[0];
+                    const important_dates=response[1];
+                    const name_servers=response[2];
+                    const similiar_domains=response[3];
+                    let registar_results="<b>Registar Info</b><table class='table table-bordered'>";
+                    Object.keys(registar_info).forEach((item,index)=>{
+                        registar_results+="<tr><td>"+item+"</td>";
+                        registar_results+="<td>"+registar_info[item]+"</td></tr>"
+                    })
+                    registar_results+="<table class='table table-bordered'>";
+                    $(".registar-info").html(registar_results);
+                    let important_result="<b>Important Dates</b><table class='table table-bordered'>";
+                    Object.keys(important_dates).forEach((item,index)=>{
+                        important_result+="<tr><td>"+item+"</td>";
+                        important_result+="<td>"+important_dates[item]+"</td></tr>"
+                    })
+                    important_result+="<table class='table table-bordered'>";
+                    $(".important-dates").html(important_result);
+                    let name_server_results="<b>Name Servers</b><div class='row'>";
+                    name_servers.forEach((item,index)=>{
+                        name_server_results+="<div class='col-4 m2'>"+item+"</div>";
+                    })
+                    name_server_results+="</div>";
+                    $(".name-server").html(name_server_results);
+                    let similiar_domains_results="<b>Similiar Domains</b><div class='row'>";
+                    similiar_domains.forEach((item,index)=>{
+                        similiar_domains_results+="<div class='col-4 m2'>"+item+"</div>";
+                    })
+                    similiar_domains_results+="</div>";
+                    $(".similiar-domains").html(similiar_domains_results);
+                    $(".loading").toggleClass('d-none');
+                },
+                error: function(xhr, status, error) {
+                    // Error callback function
+                    console.error('Error:', error);
+                    $(".loading").toggleClass('d-none');
+                    // Handle errors
+                }
+            });
+            console.log(target_host)
+        })
+    })
+</script>
+{% endblock %}
